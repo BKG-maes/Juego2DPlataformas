@@ -31,15 +31,15 @@ SampleScene
 ├─ Salida — tag Salida, BoxCollider2D Trigger, cartel SALIDA
 ├─ Fondo_Tilemap — tag Suelo y collider 2D
 ├─ Partida — Partida.cs; cuenta tarjetas y gestiona salida y fin
-├─ Main Camera — fija; Orthographic, centro (0, -0.5, -10), tamaño 6.9
+├─ Main Camera — fija; Orthographic, posición (0, 0, -10), tamaño 5
 └─ Canvas — puntuación, vidas, tarjetas, barra y panel de fin
 ```
 
-La escena contiene 18 objetos de recogida y daño: 7 de dinero, 3 tarjetas, 1 cofre y 7 martillos, además de la salida. Se eliminó `/Cofres` en la zona inferior (antes en **(10.466, -3.50)**) y se conserva `/Chest_0` en la parte superior. `/Card_0 (1)` se movió de **(10.46, 1.36)** a **(10.1, 1.36)** para que quede dentro del encuadre. El HUD incluye el contador de tarjetas. La cámara permanece fija y encuadra el nivel, las tarjetas y la salida sin recortes. Se conservan los dibujos existentes; no se añadieron scripts de cámara ni código generador.
+La escena contiene 18 objetos de recogida y daño: 7 de dinero, 3 tarjetas, 1 cofre y 7 martillos, además de la salida. Se eliminó `/Cofres` en la zona inferior (antes en **(10.466, -3.50)**) y se conserva `/Chest_0` en la parte superior. `/Card_0 (1)` se movió de **(10.46, 1.36)** a **(10.1, 1.36)** y se mantiene recolocada. El HUD incluye el contador de tarjetas. La cámara fija conserva su encuadre original y llena la pantalla sin márgenes azules: Orthographic, posición **(0, 0, -10)** y tamaño **5**. Se conservan los dibujos existentes; no se añadieron scripts de cámara ni código generador.
 
 ## Cambios recientes — 16 de octubre de 2026
 
-La variante de trabajo queda documentada en la rama `clase2-experimental`, que sustituye la variante anterior y conserva su historial. Se mantiene el daño de martillos solo en los tramos `Hammer_2`–`Hammer_6`, con seguridad en `Hammer_7`, `Hammer_0` y `Hammer_1`, y velocidad de animación 0,5. También se conserva la aparición junto a la pantalla roja y la salida que se habilita al recoger tres tarjetas. En esta actualización se retiró el cofre inferior, se colocó la salida al final del nivel, se ajustó la tarjeta al encuadre y se fijó la cámara para mostrar el nivel completo.
+La variante de trabajo queda documentada en la rama `clase2-experimental`, que sustituye la variante anterior y conserva su historial. Se mantiene el daño de martillos solo en los tramos `Hammer_2`–`Hammer_6`, con seguridad en `Hammer_7`, `Hammer_0` y `Hammer_1`, y velocidad de animación 0,5. También se conserva la aparición junto a la pantalla roja y la salida que se habilita al recoger tres tarjetas. Se retiró el cofre inferior, se colocó la salida al final del nivel y se recolocó la tarjeta. La cámara vuelve a su configuración original (posición **(0, 0, -10)**, tamaño ortográfico **5**) para llenar la pantalla sin márgenes azules.
 
 ## Relación con los apuntes
 
@@ -56,6 +56,6 @@ Compilación comprobada sin errores de C#. Se comprobaron en Play los ocho fotog
 
 Se comprobó la aparición junto a la pantalla roja; la salida bloqueada con cero, una o dos tarjetas; su apertura al recoger la tercera; el HUD 3/3 y 75 puntos por las tres tarjetas; la victoria al tocar la pantalla; el personaje detenido en Idle y el reinicio con tres vidas, cero tarjetas y la salida bloqueada. Las comprobaciones previas de recogida, derrota, fricción de paredes y caída sin daño se mantienen. Unity quedó fuera de Play.
 
-Tras los últimos cambios se repitieron en Play las comprobaciones de recogida de las tres tarjetas, bloqueo y apertura de la salida, victoria y reinicio. También se verificó que las tres tarjetas y la pantalla de salida quedan completas dentro de un encuadre 16:9 y que solo permanece el cofre superior. Estas pruebas de interacción desplazan al personaje hasta los objetos; no sustituyen una partida manual completa para valorar la dificultad del recorrido.
+Tras los últimos cambios se repitieron en Play las comprobaciones de recogida de las tres tarjetas, bloqueo y apertura de la salida, victoria y reinicio. También se comprobó que solo permanece el cofre superior. Estas pruebas de interacción desplazan al personaje hasta los objetos; no sustituyen una partida manual completa para valorar la dificultad del recorrido. La cámara se documenta con su encuadre original; no se añaden pruebas nuevas de Play.
 
-![Nivel con la salida al final y las tarjetas dentro del encuadre](Documentacion/clase2.png)
+![Escena con la cámara en su encuadre original y los objetos recolocados](Documentacion/clase2.png)

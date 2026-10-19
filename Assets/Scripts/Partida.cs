@@ -103,6 +103,7 @@ public class Partida : MonoBehaviour
         }
 
         terminada = true;
+        if (AudioManager.Instance != null) AudioManager.Instance.ReproducirVictoria();
         if (textoFin != null)
         {
             textoFin.text = $"HAS ESCAPADO\nSCORE:{puntuacion:0000}\nPulsa R para reiniciar";
@@ -171,6 +172,7 @@ public class Partida : MonoBehaviour
     {
         // Muestra el fin de juego; Personaje detiene su física al recibir la última vida.
         terminada = true;
+        if (AudioManager.Instance != null) AudioManager.Instance.ReproducirDerrota();
 
         if (textoFin != null)
         {

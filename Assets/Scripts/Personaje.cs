@@ -1,301 +1,138 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D), typeof(Animator), typeof(SpriteRenderer))]
+[RequireComponent(typeof(CapsuleCollider2D))]
 public class Personaje : MonoBehaviour
 {
     public Partida partida;
+    public LayerMask capaSuelo;
     public float velocidad = 5f;
-    public float fuerzaSalto = 9f;
-    public float duracionInvulnerabilidad = 1.2f;
-    public float duracionBloqueoGolpe = 0.25f;
-    public float duracionTinteGolpe = 0.25f;
+    public float fuerzaSalto = 6f;
 
+    private const float gravedad = 23.62f;
     private Rigidbody2D cuerpo;
     private Animator animador;
     private SpriteRenderer sprite;
-    private Color colorOriginal;
+    private CapsuleCollider2D capsula;
     private float movimientoHorizontal;
-    private float invulnerabilidadRestante;
-    private float bloqueoGolpeRestante;
-    private float tinteGolpeRestante;
-    private bool enSuelo;
     private bool saltoSolicitado;
-    private bool muerto;
 
     private void Awake()
     {
-        // Guarda los componentes necesarios para el movimiento y las animaciones.
         cuerpo = GetComponent<Rigidbody2D>();
         animador = GetComponent<Animator>();
         sprite = GetComponent<SpriteRenderer>();
-        colorOriginal = sprite.color;
-        cuerpo.freezeRotation = true;
+        capsula = GetComponent<CapsuleCollider2D>();
     }
 
     private void Update()
     {
-        // Cuenta los temporizadores del golpe y restaura el color al terminar.
-        ActualizarTemporizadores();
+        if (partida.terminada) return;
 
-        if (muerto || (partida != null && partida.terminada))
-        {
-            movimientoHorizontal = 0f;
-            saltoSolicitado = false;
-            return;
-        }
+        movimientoHorizontal = Input.GetAxisRaw("Horizontal");
+        if (Input.GetKeyDown(KeyCode.Space)) saltoSolicitado = true;
 
-        // Lee el eje Horizontal y guarda el salto para aplicarlo en FixedUpdate.
-        if (bloqueoGolpeRestante > 0f)
-        {
-            movimientoHorizontal = 0f;
-            saltoSolicitado = false;
-        }
-        else
-        {
-            movimientoHorizontal = Input.GetAxisRaw("Horizontal");
-
-            if (Input.GetKeyDown(KeyCode.Space) && enSuelo)
-            {
-                saltoSolicitado = true;
-            }
-        }
-
-        // Actualiza la animación de movimiento y mira hacia el sentido elegido.
         animador.SetFloat("Speed", Mathf.Abs(movimientoHorizontal));
-        if (movimientoHorizontal > 0f)
-        {
-            sprite.flipX = false;
-        }
-        else if (movimientoHorizontal < 0f)
-        {
-            sprite.flipX = true;
-        }
-
+        if (movimientoHorizontal > 0f) sprite.flipX = false;
+        else if (movimientoHorizontal < 0f) sprite.flipX = true;
     }
 
     private void FixedUpdate()
     {
-        if (muerto || (partida != null && partida.terminada))
-        {
-            cuerpo.linearVelocity = Vector2.zero;
-            return;
-        }
+        if (partida.terminada) return;
 
-        if (bloqueoGolpeRestante > 0f)
-        {
-            movimientoHorizontal = 0f;
-            saltoSolicitado = false;
-        }
-
-        // Cambia la velocidad horizontal sin alterar la velocidad vertical.
         Vector2 velocidadActual = cuerpo.linearVelocity;
+        float tiempoFisico = Time.fixedDeltaTime;
+        bool enSuelo = velocidadActual.y <= 0.1f && ComprobarRayos(true, 0.04f);
+        float distanciaTecho = velocidadActual.y > 0f ? velocidadActual.y * tiempoFisico + 0.02f : 0.04f;
+        bool techo = ComprobarRayos(false, distanciaTecho);
+        animador.SetBool("Grounded", enSuelo);
         velocidadActual.x = movimientoHorizontal * velocidad;
 
-        if (saltoSolicitado && enSuelo)
+        if (enSuelo)
         {
-            velocidadActual.y = fuerzaSalto;
-            CambiarEstadoSuelo(false);
-            animador.SetTrigger("Jump");
+            velocidadActual.y = 0f;
+            if (saltoSolicitado && !techo)
+            {
+                velocidadActual.y = fuerzaSalto;
+                animador.SetBool("Grounded", false);
+                animador.SetTrigger("Jump");
+            }
+        }
+        else
+        {
+            if (velocidadActual.y > 0f && techo) velocidadActual.y = 0f;
+            velocidadActual.y -= gravedad * tiempoFisico;
         }
 
         saltoSolicitado = false;
         cuerpo.linearVelocity = velocidadActual;
-
-        // El siguiente callback físico vuelve a confirmar si sigue apoyado.
-        enSuelo = false;
-        animador.SetBool("Grounded", false);
     }
 
-    private void OnCollisionEnter2D(Collision2D colision)
+    private bool ComprobarRayos(bool haciaAbajo, float distancia)
     {
-        ComprobarSuelo(colision);
-    }
-
-    private void OnCollisionStay2D(Collision2D colision)
-    {
-        ComprobarSuelo(colision);
-    }
-
-    private void OnCollisionExit2D(Collision2D colision)
-    {
-        if (muerto || (partida != null && partida.terminada))
-        {
-            return;
-        }
-
-        if (colision.gameObject.CompareTag("Suelo"))
-        {
-            CambiarEstadoSuelo(false);
-        }
+        Bounds limites = capsula.bounds;
+        Vector2 direccion = haciaAbajo ? Vector2.down : Vector2.up;
+        float y = haciaAbajo ? limites.min.y + 0.01f : limites.max.y - 0.01f;
+        float margen = 0.05f;
+        Vector2 origenIzquierdo = new Vector2(limites.min.x + margen, y);
+        Vector2 origenCentro = new Vector2(limites.center.x, y);
+        Vector2 origenDerecho = new Vector2(limites.max.x - margen, y);
+        Debug.DrawRay(origenIzquierdo, direccion * distancia, Color.yellow);
+        Debug.DrawRay(origenCentro, direccion * distancia, Color.yellow);
+        Debug.DrawRay(origenDerecho, direccion * distancia, Color.yellow);
+        RaycastHit2D izquierda = Physics2D.Raycast(origenIzquierdo, direccion, distancia, capaSuelo);
+        RaycastHit2D centro = Physics2D.Raycast(origenCentro, direccion, distancia, capaSuelo);
+        RaycastHit2D derecha = Physics2D.Raycast(origenDerecho, direccion, distancia, capaSuelo);
+        return izquierda.collider != null || centro.collider != null || derecha.collider != null;
     }
 
     private void OnTriggerEnter2D(Collider2D otro)
     {
-        if (muerto || (partida != null && partida.terminada))
-        {
-            return;
-        }
+        if (partida.terminada) return;
 
-        // Los objetos recogibles se identifican por su tag y se puntúan una vez.
         if (otro.CompareTag("Dinero"))
         {
-            Recoger(otro, partida != null ? partida.puntosDinero : 0);
+            Recoger(otro, partida.puntosDinero, false);
         }
         else if (otro.CompareTag("Cartas"))
         {
-            Recoger(otro, partida != null ? partida.puntosCartas : 0, true);
+            Recoger(otro, partida.puntosCartas, true);
         }
         else if (otro.CompareTag("Cofres"))
         {
-            Recoger(otro, partida != null ? partida.puntosCofres : 0);
+            Recoger(otro, partida.puntosCofres, false);
         }
         else if (otro.CompareTag("Prensas"))
         {
-            RecibirGolpe();
-        }
-        else if (otro.CompareTag("Salida"))
-        {
-            IntentarVictoria();
-        }
-    }
-
-    private void OnTriggerStay2D(Collider2D otro)
-    {
-        // Si permanece sobre una prensa, puede volver a recibir daño al acabar la inmunidad.
-        if (otro.CompareTag("Prensas"))
-        {
-            RecibirGolpe();
-        }
-        else if (otro.CompareTag("Salida"))
-        {
-            IntentarVictoria();
-        }
-    }
-
-    private void ComprobarSuelo(Collision2D colision)
-    {
-        if (!colision.gameObject.CompareTag("Suelo"))
-        {
-            return;
-        }
-
-        // Solo cuenta como suelo un contacto cuya normal apunta hacia arriba.
-        foreach (ContactPoint2D contacto in colision.contacts)
-        {
-            if (contacto.normal.y > 0.5f && cuerpo.linearVelocity.y <= 0.1f)
+            partida.RecibirDanio();
+            if (partida.terminada)
             {
-                CambiarEstadoSuelo(true);
-                return;
+                movimientoHorizontal = 0f;
+                saltoSolicitado = false;
+                cuerpo.linearVelocity = Vector2.zero;
+                animador.ResetTrigger("Jump");
+                animador.ResetTrigger("Hurt");
+                animador.SetTrigger("Death");
+                cuerpo.simulated = false;
+            }
+            else
+            {
+                animador.SetTrigger("Hurt");
             }
         }
-    }
-
-    private void CambiarEstadoSuelo(bool estado)
-    {
-        enSuelo = estado;
-        animador.SetBool("Grounded", enSuelo);
-    }
-
-    private void Recoger(Collider2D objeto, int puntos, bool esTarjeta = false)
-    {
-        if (partida == null || partida.terminada || !objeto.enabled)
+        else if (otro.CompareTag("Salida"))
         {
-            return;
+            partida.GanarPartida();
         }
+    }
 
-        // Desactiva el trigger antes de destruirlo para evitar puntuación duplicada.
+    private void Recoger(Collider2D objeto, int puntos, bool esTarjeta)
+    {
+        if (!objeto.enabled) return;
         objeto.enabled = false;
-        if (esTarjeta)
-        {
-            partida.RecogerTarjeta();
-        }
-
+        if (esTarjeta) partida.RecogerTarjeta();
         partida.SumarPuntos(puntos);
         Destroy(objeto.gameObject);
-    }
-
-    private void IntentarVictoria()
-    {
-        if (partida != null && partida.GanarPartida())
-        {
-            // Detiene la física y deja al personaje en reposo, sin activar Death.
-            movimientoHorizontal = 0f;
-            saltoSolicitado = false;
-            cuerpo.linearVelocity = Vector2.zero;
-            animador.ResetTrigger("Jump");
-            animador.ResetTrigger("Hurt");
-            animador.SetFloat("Speed", 0f);
-            CambiarEstadoSuelo(true);
-            cuerpo.simulated = false;
-        }
-    }
-
-    private void RecibirGolpe()
-    {
-        if (partida == null || partida.terminada || muerto || invulnerabilidadRestante > 0f)
-        {
-            return;
-        }
-
-        partida.RecibirDanio();
-        if (partida.terminada)
-        {
-            Morir();
-            return;
-        }
-
-        AplicarEfectoGolpe();
-    }
-
-    private void AplicarEfectoGolpe()
-    {
-        // Limita el daño repetido, bloquea brevemente el movimiento y muestra el golpe.
-        invulnerabilidadRestante = duracionInvulnerabilidad;
-        bloqueoGolpeRestante = duracionBloqueoGolpe;
-        tinteGolpeRestante = duracionTinteGolpe;
-        sprite.color = Color.red;
-        animador.SetTrigger("Hurt");
-    }
-
-    private void ActualizarTemporizadores()
-    {
-        if (invulnerabilidadRestante > 0f)
-        {
-            invulnerabilidadRestante -= Time.deltaTime;
-        }
-
-        if (bloqueoGolpeRestante > 0f)
-        {
-            bloqueoGolpeRestante -= Time.deltaTime;
-        }
-
-        if (tinteGolpeRestante > 0f)
-        {
-            tinteGolpeRestante -= Time.deltaTime;
-            if (tinteGolpeRestante <= 0f)
-            {
-                sprite.color = colorOriginal;
-            }
-        }
-    }
-
-    private void Morir()
-    {
-        if (muerto)
-        {
-            return;
-        }
-
-        // Detiene el movimiento y deja que el Animator reproduzca la muerte.
-        muerto = true;
-        movimientoHorizontal = 0f;
-        saltoSolicitado = false;
-        cuerpo.linearVelocity = Vector2.zero;
-        sprite.color = colorOriginal;
-        tinteGolpeRestante = 0f;
-        animador.ResetTrigger("Jump");
-        animador.ResetTrigger("Hurt");
-        animador.SetTrigger("Death");
-        cuerpo.simulated = false;
     }
 }

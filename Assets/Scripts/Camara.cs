@@ -19,8 +19,6 @@ public class Camara : MonoBehaviour
         {
             return;
         }
-
-        // Mantiene los bordes horizontales de la vista dentro del fondo.
         float semiancho = camara.orthographicSize * camara.aspect;
         float limiteIzquierdo = fondo.bounds.min.x + semiancho;
         float limiteDerecho = fondo.bounds.max.x - semiancho;

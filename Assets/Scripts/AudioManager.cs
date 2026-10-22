@@ -3,10 +3,8 @@ using UnityEngine;
 public class AudioManager : MonoBehaviour
 {
     public static AudioManager Instance;
-
     public AudioSource musicaFondo;
     public AudioSource efectosSource;
-
     public AudioClip sonidoVictoria;
     public AudioClip sonidoDerrota;
 

@@ -84,7 +84,7 @@ public class Partida : MonoBehaviour
         {
             terminada = true;
             if (AudioManager.Instance != null) AudioManager.Instance.ReproducirDerrota();
-            textoFin.text = $"FIN DEL JUEGO\nSCORE:{puntuacion:0000}\nPulsa R para reiniciar";
+            textoFin.text = puntuacion.ToString("0000");
             textoFin.gameObject.SetActive(true);
             panelFin.SetActive(true);
         }
@@ -92,9 +92,9 @@ public class Partida : MonoBehaviour
 
     private void ActualizarHUD()
     {
-        textoPuntuacion.text = $"SCORE:{puntuacion:0000}";
+        textoPuntuacion.text = puntuacion.ToString("0000");
         textoVidas.text = $"VIDAS: {vidasActuales}/{vidasMaximas}";
-        textoTarjetas.text = $"TARJETAS: {tarjetasRecogidas}/{tarjetasNecesarias}";
+        textoTarjetas.text = $"{tarjetasRecogidas}/{tarjetasNecesarias}";
         barraVida.value = vidasActuales;
     }
 }

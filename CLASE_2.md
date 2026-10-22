@@ -1,6 +1,6 @@
 # Clase 2 — Juego de plataformas
 
-Abre `Assets/Scenes/SampleScene.unity` en Unity **6000.4.12f1** y pulsa Play. El paquete `com.unity.pipeline` permite editar y comprobar el proyecto con Unity CLI; la lógica del nivel está en `Personaje.cs`, `Partida.cs`, `Camara.cs` y `AudioManager.cs`. `Victoria.cs` controla la pantalla final.
+Abre `Assets/Scenes/Menu.unity` en Unity **6000.4.12f1** y pulsa Play. El menú de **Cybermurcia 2030** permite jugar o salir. El paquete `com.unity.pipeline` permite editar y comprobar el proyecto con Unity CLI; la lógica del nivel está en `Personaje.cs`, `Partida.cs`, `Camara.cs` y `AudioManager.cs`. `Victoria.cs` controla la pantalla de victoria y `Menu.cs` contiene los métodos públicos de los botones.
 
 ## Alcance de la planificación
 
@@ -11,7 +11,7 @@ La planificación de plataformas pide para Clase 2: animaciones del personaje y 
 - **A/D o flechas izquierda/derecha:** moverse. **Espacio:** saltar. El proyecto usa la opción de entrada `Both`; estos controles leen Legacy Input mediante `Input.GetAxisRaw`.
 - **R:** reiniciar la escena después de terminar, tanto por derrota como por victoria.
 - `Personaje.cs` usa tres rayos hacia el suelo y tres hacia el techo, filtrados por la capa `Suelo`. Lee la entrada en `Update()` y calcula las dos componentes de velocidad en `FixedUpdate()`. La gravedad actual ajustada por el usuario es `23.62` unidades/s² en código y `Rigidbody2D.gravityScale` vale cero; el cuerpo sigue siendo Dynamic.
-- El personaje es Biker y empieza con **3 vidas**. Al llegar a cero aparece «FIN DEL JUEGO». Caer bajo el escenario no quita vidas ni provoca reaparición.
+- El personaje es Biker y empieza con **3 vidas**. Al llegar a cero aparece «FIN DE PARTIDA», con la puntuación y botones para reintentar o volver al menú. Caer bajo el escenario no quita vidas ni provoca reaparición.
 - La cámara sigue al personaje solo en el eje X desde `LateUpdate()`. Limita su centro horizontal a los bounds de `FondoImagen.SpriteRenderer`, considerando la mitad del ancho visible (`orthographicSize * aspect`); si la vista es más ancha que el fondo, centra la cámara en este. Mantiene Y=0, Z=-10 y tamaño ortográfico 5.
 - Los siete martillos tienen Collider2D animados por el clip `MartilloAnimacion`; solo hacen daño en los tramos `Hammer_2` a `Hammer_6`. Los tramos `Hammer_7`, `Hammer_0` y `Hammer_1` son de seguridad. La animación conserva la velocidad **0,5**. No hay una clase dedicada a martillos ni código generador.
 - El daño usa `OnTriggerEnter2D`: cada nuevo contacto con un collider activo resta una vida. No hay tinte rojo, bloqueo de movimiento ni temporizador de invulnerabilidad. Si el personaje permanece bajo un martillo, su collider vuelve a activarse con el siguiente golpe y causa otro impacto.
@@ -88,3 +88,16 @@ La correspondencia por temas, las adaptaciones y la ayuda de IA están en [la re
 `Personaje.cs` se reduce de 211 a 138 líneas y `Partida.cs` de 176 a 100, sin comentarios. El alcance se contrasta con `PlanificacionPlataformas.pdf`, p. 1, `FCV_4_Clase.pdf`, pp. 11–14, y `FCV_5_Clase.pdf`, pp. 8–10. Se eliminan los tres temporizadores de golpe, el tinte rojo, el bloqueo de entrada, el booleano de muerte duplicado, `OnTriggerStay2D`, la preparación de reposo al ganar y métodos que solo envolvían una llamada. Las referencias obligatorias se usan directamente tras comprobar sus asignaciones en el Inspector. La configuración física permanece en el Inspector. Los rayos, la gravedad en código, las animaciones, recogidas, daño, HUD, sonidos, derrota, reinicio y victoria se conservan.
 
 La versión final compila sin errores. En Play se comprobó la derrota mediante golpes reales del martillo y el reinicio con R; salida sin tarjetas bloqueada; 50 puntos por el cofre, 10 por dinero y 25 por cada tarjeta; tres tarjetas abren la salida y Victoria muestra `0135`; volver reinicia vidas a tres, puntos y tarjetas a cero. No aparecieron errores de ejecución. Las pruebas de colisión usaron posiciones temporales durante Play y no sustituyen un recorrido manual completo. La programación de esta simplificación se hizo con Luna Max.
+
+
+## Menús — 22 de octubre de 2026
+
+`Menu.unity` es la primera escena de Build Settings, seguida de SampleScene y Victoria. El título del juego es **Cybermurcia 2030**. El menú de inicio reutiliza el fondo industrial y la música del nivel, incluye controles y botones Jugar y Salir. La derrota muestra la puntuación, Reintentar y Menú principal; R conserva el reinicio.
+
+Los diseños son objetos normales de Canvas guardados en las escenas, editables desde la jerarquía y el Inspector. `Menu.cs` tiene 20 líneas, sin comentarios, y solo contiene tres métodos públicos: cargar SampleScene, cargar Menu y cerrar la aplicación. Los botones llaman a esos métodos mediante OnClick en el Inspector, siguiendo el enfoque de botones y SceneManager de los apuntes. La programación se realizó con Luna Max. No hay código que genere los menús.
+
+Se comprobaron en Play Jugar con Enter, la derrota por golpes reales de martillo, la puntuación de 25 puntos, Reintentar con ratón y la vuelta al menú con ratón. Reintentar deja tres vidas, cero puntos y cero tarjetas. No hay errores de compilación ni errores del juego en la consola. Salir usa Application.Quit, cuyo cierre se aplica a la versión exportada. Las posiciones utilizadas para provocar la derrota fueron temporales durante Play.
+
+![Menú de inicio de Cybermurcia 2030](Documentacion/menu-inicio.png)
+
+![Menú de derrota con la puntuación](Documentacion/menu-derrota.png)
